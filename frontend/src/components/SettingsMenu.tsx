@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { useAuthState } from '@/contexts/AuthContext'
-import { getApiUrl, getLatestRelease } from '@/repository'
+import { getApiUrl } from '@/repository'
 import { Popover, PopoverContent, PopoverTrigger } from './Popover'
 import UserInfo from './UserInfo'
 import { version } from '../../package.json'
@@ -88,7 +88,6 @@ const isNewerReleaseAvailable = (current: string, latest: string): boolean => {
 const SettingsMenu: React.FC<Props> = () => {
   const [isOpen, setOpen] = useState(false)
   const { user, isAuthenticationEnabled } = useAuthState()
-  const ghLatestRelease = useQuery({ ...getLatestRelease(), enabled: isOpen })
 
   // If auth is not enabled, just show a settings icon
   let dialogTrigger: React.ReactElement | string = <Cog6ToothIcon />
@@ -101,10 +100,6 @@ const SettingsMenu: React.FC<Props> = () => {
         ? `${nameParts.at(0)![0]}${nameParts.at(-1)![0]}`
         : nameParts[0]
   }
-
-  const isNewerRelease = ghLatestRelease.isSuccess
-    ? isNewerReleaseAvailable(version, ghLatestRelease.data.tag_name)
-    : false
 
   return (
     <Popover placement="bottom-start" open={isOpen} onOpenChange={setOpen}>
@@ -169,11 +164,6 @@ const SettingsMenu: React.FC<Props> = () => {
 
           <div className="px-6 pb-3 text-center text-tremor-content-subtle dark:text-dark-tremor-content-subtle text-sm">
             Plombery v{version}{' '}
-            {isNewerRelease && (
-              <span className="text-xs text-amber-600">
-                (v{ghLatestRelease.data?.tag_name} available)
-              </span>
-            )}
           </div>
         </Card>
       </PopoverContent>

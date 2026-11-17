@@ -80,7 +80,7 @@ def app():
 
     try:
         if orchestrator.scheduler.running:
-            orchestrator.scheduler.shutdown(wait=False)
+            orchestrator.scheduler.shutdown(wait=True)
     except RuntimeError:
         # The event loop fixture may have closed the loop already, in which case
         # the scheduler is gone with it and there is nothing left to shut down.

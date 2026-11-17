@@ -68,6 +68,9 @@ default-groups = ["dev", "examples"]
 requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.dynamic]
 version = { attr = "plombery._version.__version__" }
 
