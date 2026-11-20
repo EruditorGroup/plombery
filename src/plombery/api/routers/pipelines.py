@@ -7,6 +7,8 @@ from plombery.api.authentication import NeedsAuth
 from plombery.database.schemas import PipelineRun
 from plombery.orchestrator import orchestrator, run_pipeline_now
 from plombery.pipeline.pipeline import Pipeline
+from plombery.pipeline._utils import get_job_id
+
 
 router = APIRouter(prefix="/pipelines", tags=["Pipelines"], dependencies=[NeedsAuth])
 
@@ -36,6 +38,30 @@ def get_pipeline(pipeline_id: str) -> Pipeline:
         raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
 
     _populate_next_fire_time(pipeline)
+
+    return pipeline
+
+
+@router.post("/{pipeline_id}/pause", description="Pause all triggers for pipeline")
+def get_pipeline(pipeline_id: str) -> Pipeline:
+    if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
+        raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
+
+    for trigger in pipeline.triggers:
+        trigger.paused = True
+        orchestrator.scheduler.pause_job(get_job_id(pipeline.id, trigger.id))
+
+    return pipeline
+
+
+@router.post("/{pipeline_id}/resume", description="Resume all triggers for pipeline")
+def get_pipeline(pipeline_id: str) -> Pipeline:
+    if not (pipeline := orchestrator.get_pipeline(pipeline_id)):
+        raise HTTPException(404, f"The pipeline with ID {pipeline_id} doesn't exist")
+
+    for trigger in pipeline.triggers:
+        trigger.paused = False
+        orchestrator.scheduler.resume_job(get_job_id(pipeline.id, trigger.id))
 
     return pipeline
 

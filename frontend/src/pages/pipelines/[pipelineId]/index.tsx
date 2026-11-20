@@ -1,8 +1,11 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Card, Title, Col, Text, Flex, Grid, Badge } from '@tremor/react'
+import { useMutation, useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { Button, Card, Title, Col, Text, Flex, Grid, Badge } from '@tremor/react'
 import { useParams } from 'react-router'
 import React from 'react'
 
+import { PlayIcon, PauseIcon } from '@heroicons/react/24/outline'
+
+import { pausePipeline, resumePipeline } from '../../../repository'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import RunsDurationChart from '@/components/RunsDurationChart'
 import RunsList from '@/components/RunsList'
@@ -30,6 +33,23 @@ const PipelineView: React.FC = () => {
 
   const pipeline = pipelineQuery.data
 
+  const pausePipelineMutation = useMutation({
+    ...pausePipeline(pipeline.id),
+    onSuccess: () => {
+      pipelineQuery.refetch();
+    },
+  });
+  const resumePipelineMutation = useMutation({
+    ...resumePipeline(pipeline.id),
+    onSuccess: () => {
+      pipelineQuery.refetch();
+    },
+  });
+
+  const hasPausedTrigger = Boolean(
+    pipeline.triggers?.some((trigger) => trigger.paused)
+  );
+
   return (
     <PageLayout
       header={
@@ -55,7 +75,33 @@ const PipelineView: React.FC = () => {
               )}
             </Flex>
 
-            <ManualRunDialog pipeline={pipeline} />
+            <Flex className="gap-3">
+              {hasPausedTrigger ? (
+                <Button
+                  color="green"
+                  variant="primary"
+                  size="xs"
+                  icon={PlayIcon}
+                  onClick={() => resumePipelineMutation.mutateAsync()}
+                  tooltip="Resume pipeline"
+                >
+                  Resume
+                </Button>
+              ) : (
+                <Button
+                  color="amber"
+                  variant="primary"
+                  size="xs"
+                  icon={PauseIcon}
+                  onClick={() => pausePipelineMutation.mutateAsync()}
+                  tooltip="Pause pipeline"
+                >
+                  Pause
+                </Button>
+              ) }
+              <ManualRunDialog pipeline={pipeline} />
+            </Flex>
+
           </Flex>
 
           <Breadcrumbs pipeline={pipeline} className="mt-4 md:mt-0" />
@@ -65,9 +111,11 @@ const PipelineView: React.FC = () => {
       }
     >
       <Grid numItemsMd={2} numItemsLg={3} className="gap-6 mt-6">
+        {pipeline.tasks.length > 1 ? (
         <Card className="md:col-span-2 lg:col-span-3 p-0">
           <DagViewer pipeline={pipeline} />
         </Card>
+        ) : null}
 
         <RunsStatusChart subject="Pipeline" query={runsQuery} />
 
