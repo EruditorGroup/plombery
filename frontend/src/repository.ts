@@ -339,3 +339,35 @@ export const runPipeline = (
     })
   },
 })
+
+export const pausePipeline = (
+  pipelineId: string,
+): UseMutationOptions<
+  Pipeline,
+  PlomberyHttpError,
+  Record<string, any> | void
+> => ({
+  async mutationFn() {
+    return await post<Pipeline>(`pipelines/${pipelineId}/pause`, {
+      json: {
+        reason: 'web',
+      },
+    })
+  },
+})
+
+export const resumePipeline = (
+  pipelineId: string,
+): UseMutationOptions<
+  Pipeline,
+  PlomberyHttpError,
+  Record<string, any> | void
+> => ({
+  async mutationFn() {
+    return await post<Pipeline>(`pipelines/${pipelineId}/resume`, {
+      json: {
+        reason: 'web',
+      },
+    })
+  },
+})

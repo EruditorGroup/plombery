@@ -6,9 +6,11 @@ from sqlalchemy import inspect, and_, or_
 
 from plombery.constants import MANUAL_TRIGGER_ID
 from plombery.database.base import Base, SessionLocal, engine
-from plombery.database.models import PipelineRun
+from plombery.database.models import PipelineRun, TriggersState
 from plombery.schemas import PipelineRunStatus
-
+from plombery.pipeline.pipeline import Trigger
+from sqlalchemy import select
+from sqlalchemy.dialects.sqlite import insert
 
 INITIAL_REVISION_ID = "cd90ef97cbc9"
 
@@ -86,6 +88,37 @@ def _mark_cancelled_runs():
             )
         )
 
+        db.commit()
+
+
+def load_trigger_state(pipeline_id: str, trigger: Trigger):
+    with SessionLocal() as db:
+        trigger_state = db.execute(
+            select(TriggersState)
+            .where(
+                and_(
+                    TriggersState.pipeline_id == pipeline_id,
+                    TriggersState.trigger_id == trigger.id,
+                )
+            )
+        ).scalar_one_or_none()
+        if trigger_state:
+            trigger.paused = trigger_state.paused
+    return trigger
+
+
+def update_trigger_state(pipeline_id, trigger: Trigger):
+    with SessionLocal() as db:
+        stmt = insert(TriggersState).values(
+            pipeline_id=pipeline_id,
+            trigger_id=trigger.id,
+            paused=trigger.paused,
+        )
+        upsert_stmt = stmt.on_conflict_do_update(
+            index_elements=[TriggersState.pipeline_id, TriggersState.trigger_id],
+            set_={"paused": stmt.excluded.paused},
+        )
+        db.execute(upsert_stmt)
         db.commit()
 
 

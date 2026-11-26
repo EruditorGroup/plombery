@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from .api import app
 from .config import settings
-from .database.operations import setup_database
+from .database.operations import setup_database, load_trigger_state
 from .logger import get_logger  # noqa F401
 from .logger.web_socket_handler import bind_event_loop
 from .notifications import NotificationRule, notification_manager
@@ -104,6 +104,8 @@ def check_registered_pipelines() -> None:
 
     for pipeline in orchestrator.pipelines.values():
         pipeline.issues = _find_pipeline_issues(pipeline)
+        for trigger in pipeline.triggers:
+            load_trigger_state(pipeline.id, trigger)
 
         errors = [issue for issue in pipeline.issues if issue.level == "error"]
         if errors:
