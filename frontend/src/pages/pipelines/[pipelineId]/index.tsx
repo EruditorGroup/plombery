@@ -27,11 +27,8 @@ const PipelineView: React.FC = () => {
   const pipelineQuery = useQuery(getPipeline(pipelineId))
   const runsQuery = useInfiniteQuery(listRuns(pipelineId))
 
-  if (pipelineQuery.isPending) return <div>Loading...</div>
-
-  if (pipelineQuery.isError) return <div>An error has occurred</div>
-
   const pipeline = pipelineQuery.data
+  if (!pipeline) return <div>Loading...</div>
 
   const pausePipelineMutation = useMutation({
     ...pausePipeline(pipeline.id),
@@ -45,6 +42,10 @@ const PipelineView: React.FC = () => {
       pipelineQuery.refetch();
     },
   });
+
+  if (pipelineQuery.isPending) return <div>Loading...</div>
+
+  if (pipelineQuery.isError) return <div>An error has occurred</div>
 
   const hasPausedTrigger = Boolean(
     pipeline.triggers?.some((trigger) => trigger.paused)

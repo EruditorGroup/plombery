@@ -120,3 +120,19 @@ class TaskRunOutput(Base):
     data: Mapped[Any] = mapped_column(JSON, nullable=False)
 
     task_run: Mapped[TaskRun] = relationship(back_populates="task_output")
+
+
+class TriggersState(Base):
+    """Stores trigger statuses"""
+
+    __tablename__ = "triggers_state"
+
+    pipeline_id: Mapped[str] = mapped_column(
+        String(),
+        primary_key=True
+    )
+    trigger_id: Mapped[str] = mapped_column(
+        String(),
+        primary_key=True
+    )
+    paused: Mapped[bool]
